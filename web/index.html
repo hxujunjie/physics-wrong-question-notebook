@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>物理错题整理 · 教师端</title><link rel="icon" href="favicon.svg"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="fixes.css"></head>
+<body><div class="app-shell">
+  <aside class="sidebar" id="setup-panel"><div class="brand"><span class="brand-mark"></span><div><h1>物理错题整理</h1><p>教师端 · 智能识别</p></div></div>
+    <section class="setup"><h2>任务设置</h2>
+      <label>识别方式</label>
+      <div class="segmented mode-tabs" id="mode-tabs"><button type="button" id="mode-online" class="active">在线 AI 识别</button><button type="button" id="mode-import">导入 JSON</button></div>
+
+      <div id="online-settings">
+        <label>API Key <small id="provider-status">未配置</small></label>
+        <form class="key-row" onsubmit="return false"><input id="api-key" type="password" autocomplete="off" placeholder="先粘贴密钥，点保存后自动识别服务商"><button id="save-provider" type="button">保存</button></form>
+        <p class="path-hint">推荐流程：输入 Key → 保存 → 自动识别服务商/模型/接口。识别错了可再改下面三项后再次保存（不必重贴 Key）。</p>
+        <label>识别服务商</label>
+        <select id="provider-select"></select>
+        <label>模型 <small id="model-hint"></small></label>
+        <select id="model-select"></select>
+        <input id="model-name" type="text" placeholder="自定义模型名 / 接入点 ID" hidden autocomplete="off">
+        <label id="base-url-label">接口地址 Base URL <small>选服务商或粘贴 Key 后自动填入</small></label>
+        <input id="base-url" type="text" placeholder="例如 https://open.bigmodel.cn/api/paas/v4" autocomplete="off">
+        <div class="key-actions"><button id="test-provider" class="quiet" type="button">测试连接</button><button id="clear-provider" class="quiet danger" type="button">清除 Key</button></div>
+      </div>
+
+      <div id="import-settings" hidden>
+        <label>识别结果 JSON</label>
+        <button class="path-field" data-pick="recognition_json" type="button"><span id="recognition_json">请选择 recognition_result.json</span><span>📄</span></button>
+        <p class="path-hint">不连 API，直接导入外部识别结果后进入复核。</p>
+      </div>
+
+      <label>干净练习册 PDF</label><button class="path-field" data-pick="clean_pdf" type="button"><span id="clean_pdf">请选择 PDF</span><span>📄</span></button>
+      <label id="photo-root-label">学生照片总目录</label><button class="path-field" data-pick="photo_root" type="button" id="photo-root-btn"><span id="photo_root">请选择“学生姓名/照片”总目录</span><span>📁</span></button>
+      <label>输出根目录 <small>可选</small></label><button class="path-field" data-pick="output_root" type="button"><span id="output_root">默认创建在照片目录旁</span><span>📁</span></button>
+      <p class="path-hint" id="path-hint">先配置识别服务，再选择 PDF 和学生照片。</p>
+      <div id="student-select" class="student-select" hidden></div>
+      <button class="primary" id="batch" type="button" disabled>开始智能识别</button>
+      <button class="primary" id="import-json" type="button" hidden disabled>导入识别结果</button>
+      <button id="cancel-job" class="quiet danger" type="button" hidden>取消当前任务</button>
+    </section>
+    <section class="job-card"><div class="progress"><i id="progress-bar"></i></div><strong id="job-title">等待任务</strong><span id="job-detail">识别后确认不确定项，再生成错题集。</span><div id="job-stats"></div></section>
+    <div class="sidebar-bottom"><button class="quiet" id="open" type="button" hidden>打开输出目录</button><button class="danger quiet" id="shutdown" type="button">退出服务</button><p>关闭浏览器不会停止服务。</p></div>
+  </aside>
+  <main><header class="topbar"><div><div class="title-line"><h2 id="view-title">任务首页</h2><span class="health" id="health">正在连接本地服务</span></div><p id="view-subtitle">识别后确认不确定项，再生成错题集 PDF。</p></div><div class="top-actions"><button id="shortcuts" class="icon-button" type="button">?</button><button id="back" type="button" hidden>返回学生列表</button></div></header>
+    <section id="list-view" class="content"><div class="onboarding"><b>工作流</b><ol><li>配置识别服务（或导入 JSON）并选择干净 PDF、学生照片</li><li>确认不确定 / 低置信题目；需要时可整页查看（可跳过）</li><li>点击「生成错题集」，从干净 PDF 导出个人错题 PDF</li></ol></div><div class="stats" id="stats"><article><span>学生总数</span><strong>—</strong></article><article><span>照片总数</span><strong>—</strong></article><article><span>待确认页面</span><strong>0</strong></article><article><span>已完成学生</span><strong>0</strong></article></div>
+      <section class="list-card"><div class="list-toolbar"><input id="search" type="search" placeholder="搜索学生姓名"><div id="filters" class="filters"><button data-filter="all" class="active">全部 <b>0</b></button><button data-filter="review_required">待确认 <b>0</b></button><button data-filter="reviewed">已完成 <b>0</b></button><button data-filter="failed">失败 <b>0</b></button></div><label class="sort">排序 <select id="sort"><option value="needs">待确认优先</option><option value="name">姓名顺序</option></select></label></div><div class="table-wrap"><table><thead><tr><th>学生</th><th>照片</th><th>初步错题</th><th>待确认题</th><th>进度</th><th>状态</th></tr></thead><tbody id="students"><tr><td colspan="6" class="empty">尚未导入结果。</td></tr></tbody></table></div></section>
+      <section class="result-card" id="result-card" hidden><h3>错题集已生成</h3><p id="result-text"></p><button id="result-open" type="button">打开输出目录</button></section><div class="export-actions"><button id="finalize" class="export" type="button" hidden>生成错题集</button></div>
+    </section>
+    <section id="review" class="content review" hidden><div class="review-meta"><b id="student-name"></b><span id="page-info"></span><span id="match-info"></span><span id="review-progress"></span></div><div class="segmented"><button id="low-tab">待确认题 <b id="low-count">0</b></button><button id="page-tab">整页查看 <b id="page-count">0</b></button></div><div class="review-grid"><section class="viewer-panel"><p id="position-warning" hidden></p><div id="viewer" class="viewer"><div id="media-stage"><img id="photo" draggable="false" alt="学生作业照片"><svg id="overlay" viewBox="0 0 1000 1000" preserveAspectRatio="none"></svg></div></div><div class="viewer-tools"><button id="prev-photo" type="button">上一张</button><button id="rotate-left" type="button" title="逆时针旋转 90°">↺</button><button id="rotate-right" type="button" title="顺时针旋转 90°">↻</button><button id="zoom-out" type="button">−</button><button id="reset" type="button">1</button><button id="zoom-in" type="button">+</button><button id="fit" type="button">适应</button><span id="zoom-level">100%</span><span id="rotation-level">0°</span><button id="next-photo" type="button">下一张</button></div></section><section class="review-controls"><div id="questions"></div><div class="review-footer"><button id="undo" type="button" disabled>撤销</button><span id="save-state">未作修改</span><button class="primary" id="complete" type="button">完成本页</button></div></section></div></section>
+  </main></div>
+  <div id="notice" role="status"></div><div id="error-card" class="error-card" hidden><strong id="error-title">操作失败</strong><p id="error-text"></p><button id="error-retry" hidden>重试</button><button id="error-close">关闭</button></div>
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true"><div><h3 id="modal-title"></h3><p id="modal-text"></p><div id="modal-actions"></div></div></div>
+  <div id="crop-modal" class="modal" hidden role="dialog" aria-modal="true"><div class="crop-dialog"><h3>在干净 PDF 上框选题目</h3><p>只会使用此 PDF 内容；可以添加跨页片段。拖动鼠标绘制矩形。</p><label>PDF 页码（1 基）<input id="crop-page" type="number" min="1" value="1"></label><div class="crop-canvas-wrap"><img id="pdf-page-image" alt="干净 PDF 页面"><canvas id="crop-canvas"></canvas></div><div id="crop-segments"></div><div class="modal-actions"><button id="crop-cancel">取消</button><button id="crop-add">添加当前框</button><button id="crop-save" class="primary">保存 PDF 框选</button></div></div></div>
+  <script>window.REVIEW_TOKEN="__REVIEW_TOKEN__"</script><script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>物理错题整理 · 教师端流程（可交互）</title>
+<style>
+:root{
+  --bg:#f4f6fb;--card:#fff;--ink:#1f2937;--muted:#6b7280;--line:#d8dee9;
+  --blue:#2563eb;--blue-soft:#dbeafe;--green:#059669;--green-soft:#d1fae5;
+  --amber:#d97706;--amber-soft:#fef3c7;--red:#dc2626;--red-soft:#fee2e2;
+  --purple:#7c3aed;--purple-soft:#ede9fe;--shadow:0 10px 30px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI",sans-serif;
+  color:var(--ink);
+  background:radial-gradient(circle at top left,#e8eefc 0,transparent 28%),
+             radial-gradient(circle at top right,#e7f8f1 0,transparent 24%),var(--bg);
+}
+.wrap{max-width:1280px;margin:0 auto;padding:28px 20px 48px}
+.hero{
+  background:linear-gradient(135deg,#1d4ed8,#0f766e 55%,#047857);
+  color:#fff;border-radius:22px;padding:28px;box-shadow:var(--shadow);margin-bottom:20px;
+}
+.hero h1{margin:0 0 8px;font-size:28px}
+.hero p{margin:0;opacity:.92;line-height:1.6;max-width:920px}
+.meta,.toolbar,.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.pill{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.2);
+  border-radius:999px;padding:6px 12px;font-size:13px;
+}
+button.tool{
+  border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);
+  color:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;
+}
+button.tool:hover{background:rgba(255,255,255,.2)}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.92)}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.layout{display:grid;grid-template-columns:1.35fr .9fr;gap:18px}
+@media(max-width:980px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.panel h2{margin:0;padding:16px 18px;border-bottom:1px solid var(--line);font-size:16px}
+.flow{padding:18px;display:grid;gap:12px}
+.lane-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin:6px 2px 0}
+.node{
+  border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:14px;
+  padding:14px;background:#fff;cursor:pointer;transition:.15s;
+}
+.node:hover,.node.active{transform:translateY(-1px);box-shadow:0 8px 18px rgba(37,99,235,.12);border-color:#93c5fd}
+.node.setup{border-left-color:var(--purple)}
+.node.review{border-left-color:var(--amber)}
+.node.export{border-left-color:var(--green)}
+.node.warn{border-left-color:var(--red)}
+.kicker{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--blue-soft);color:var(--blue)}
+.node.setup .tag{background:var(--purple-soft);color:var(--purple)}
+.node.review .tag{background:var(--amber-soft);color:var(--amber)}
+.node.export .tag{background:var(--green-soft);color:var(--green)}
+.node.warn .tag{background:var(--red-soft);color:var(--red)}
+.node h3{margin:0 0 6px;font-size:15px}
+.node p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.arrow{text-align:center;color:#94a3b8;font-size:18px;user-select:none}
+.detail{padding:18px}
+.detail .empty{color:var(--muted);font-size:14px;line-height:1.6}
+.detail h3{margin:0 0 8px;font-size:20px}
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.section{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fafbff}
+.section h4{margin:0 0 6px;font-size:13px;color:var(--muted)}
+.detail ul{margin:0;padding-left:18px}
+.detail li{margin:4px 0;line-height:1.55;font-size:14px}
+.mini{margin-top:14px;padding:14px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
+.mini h2{margin:0 0 8px;font-size:15px}
+.mini ol{margin:0;padding-left:18px;color:var(--muted)}
+.mini li{margin:4px 0;line-height:1.5}
+.foot{margin-top:12px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>物理错题整理 · 教师端可视化流程</h1>
+    <p>
+      当前主流程：配置识别服务 → 选择干净练习册 PDF 与学生照片 → AI 识别红笔批改 →
+      老师只确认不确定项（可改页码 / 旋转 / 必要时框选）→ 点击「生成错题集」导出 PDF。
+      点击左侧任意步骤，右侧查看详细说明。
+    </p>
+    <div class="meta">
+      <div class="pill">版本基线：教师端 v1.6.1+</div>
+      <div class="pill">高置信自动 · 异常才人工 · 只从干净 PDF 裁题</div>
+      <div class="pill">只有点击「生成错题集」才出 PDF</div>
+    </div>
+    <div class="toolbar">
+      <button class="tool" data-jump="s1">启动配置</button>
+      <button class="tool" data-jump="s4">智能识别</button>
+      <button class="tool" data-jump="s7">人工复核</button>
+      <button class="tool" data-jump="s11">生成 PDF</button>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--purple)"></i>准备配置</span>
+      <span><i class="dot" style="background:var(--blue)"></i>AI 识别</span>
+      <span><i class="dot" style="background:var(--amber)"></i>人工确认</span>
+      <span><i class="dot" style="background:var(--green)"></i>导出交付</span>
+      <span><i class="dot" style="background:var(--red)"></i>异常分支</span>
+    </div>
+  </section>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>流程图 · 点击节点查看说明</h2>
+      <div class="flow" id="flow"></div>
+    </section>
+    <aside class="panel">
+      <h2>步骤详情</h2>
+      <div class="detail" id="detail">
+        <div class="empty">点击左侧任意流程节点，这里显示该步骤的目标、老师操作、系统行为和注意点。</div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="mini">
+    <h2>老师最短路径</h2>
+    <ol>
+      <li>启动教师端，粘贴 API Key 并测试连接</li>
+      <li>选择干净 PDF + 学生照片目录，开始识别</li>
+      <li>只处理待确认题；页码错了改页眉；横图可旋转</li>
+      <li>只有裁不出 / 裁错 / 跨页跨栏时才手动框选</li>
+      <li>返回首页，点击「生成错题集」</li>
+    </ol>
+    <div class="foot">文件位置：docs/teacher_flow_interactive.html · 可直接用浏览器打开</div>
+  </section>
+</div>
+
+<script>
+const steps = [
+  {
+    id:"s1", type:"setup", tag:"准备", title:"启动教师端",
+    summary:"双击一键启动或桌面快捷方式，打开本地浏览器页面。",
+    goal:"启动仅监听 127.0.0.1 的本地教师端服务。",
+    teacher:["双击「一键启动教师端.bat」或桌面快捷方式","浏览器自动打开任务首页","更新代码后启动器会尽量停掉旧进程再起新版"],
+    system:["检查依赖与本地服务","创建或复用本机会话 token","可选创建桌面快捷方式"],
+    notes:["关闭浏览器不会自动停服务，需点页面「退出服务」或维护工具停止"]
+  },
+  {
+    id:"s2", type:"setup", tag:"配置", title:"配置识别服务",
+    summary:"粘贴 API Key → 保存 → 自动识别服务商；可选手动改模型。",
+    goal:"让系统能调用视觉模型识别红笔批改。",
+    teacher:["粘贴 API Key 并保存","确认服务商/模型（Google 推荐 gemini-3.5-flash）","点击测试连接"],
+    system:["Key 用 Windows DPAPI 本机加密保存","按 Key 形态推断服务商","连接测试验证可用性"],
+    notes:["Google 2.5 系列对新用户可能 404，优先 3.x","密钥不要提交到 Git"]
+  },
+  {
+    id:"s3", type:"setup", tag:"输入", title:"选择 PDF 与学生照片",
+    summary:"干净练习册 PDF + 学生姓名/照片总目录。",
+    goal:"确定识别素材与最终裁题来源。",
+    teacher:["选择干净练习册 PDF","选择学生照片总目录","可选指定输出根目录","预检后勾选要处理的学生"],
+    system:["扫描学生文件夹与照片数","估算 API 预算：PDF索引 + 照片识别","显示是否命中 PDF 索引缓存"],
+    notes:["最终错题内容只来自干净 PDF，不从学生照片裁最终题"]
+  },
+  {
+    id:"s4", type:"ai", tag:"识别", title:"开始智能识别",
+    summary:"先索引 PDF（可缓存），再逐张识别照片。",
+    goal:"自动得到页码、题号、对错/unknown、置信度。",
+    teacher:["确认学生范围后再次点击开始","观察进度与 API 次数","预算用尽可追加后继续"],
+    system:["读照片时尽量按 EXIF 先转正","同一 PDF 首次建索引并缓存；再次同 PDF 索引 0 次","每张照片至少 1 次识别，必要时加页校验","高置信自动 decision；unknown/低置信留给老师"],
+    notes:["例如 67 页 PDF 首次约 34 次索引 + 5 张照片；缓存后约 5 次"]
+  },
+  {
+    id:"s5", type:"ai", tag:"结果", title:"生成复核工作台",
+    summary:"识别结果写入 review_manifest，进入学生列表。",
+    goal:"把 AI 结果变成老师可确认、可修改的任务。",
+    teacher:["在学生列表查看待确认数","点学生进入复核"],
+    system:["写入 _cache/学生/review_manifest.json","保留照片锚点用于复核标注","标记裁切状态：可自动 / 需改题号 / 需框选"],
+    notes:["此时通常还不生成最终 PDF"]
+  },
+  {
+    id:"s6", type:"review", tag:"入口", title:"任务首页 · 待确认清单",
+    summary:"按学生看进度，优先处理待确认页。",
+    goal:"让老师把时间花在异常项，而不是全量重判。",
+    teacher:["筛选「待确认」","进入需要处理的学生","处理完返回首页点生成"],
+    system:["统计学生/照片/待确认页/已完成","只要有 output_dir 就显示「生成错题集」按钮"],
+    notes:["按钮不再只在识别刚结束时出现"]
+  },
+  {
+    id:"s7", type:"review", tag:"确认", title:"确认对错（主操作）",
+    summary:"只对 unknown / 低置信 / 需核对的题点正确或错题。",
+    goal:"决定哪些题进入错题本。",
+    teacher:["看照片标注与题号","点 ✓ 正确 或 × 错题","可改题号"],
+    system:["立即写入 manifest","只记录，不立刻重建 PDF","支持撤销上一次判定"],
+    notes:["高置信结果通常已自动填好"]
+  },
+  {
+    id:"s8", type:"review", tag:"纠偏", title:"改 PDF 页码 / 旋转照片",
+    summary:"页眉可直接改正 PDF 页；横图可旋转。",
+    goal:"让本页题目对齐正确练习册页，并正对老师查看。",
+    teacher:["页眉「PDF 第 X 页」直接改数字并回车","横图点 ↺ / ↻ 旋转到正向","旋转后标记位置跟随，符号保持正向"],
+    system:["改页会同步同照片其他题的页码","自动题改为按新页+各自题号裁切","已手动框选题保留几何，只更新页信息"],
+    notes:["改页通常比逐题手动框更高效"]
+  },
+  {
+    id:"s9", type:"warn", tag:"例外", title:"手动框选（跨页/跨栏/裁不出）",
+    summary:"仅在不能自动可靠裁题时使用。",
+    goal:"告诉系统这道题在干净 PDF 的准确区域。",
+    teacher:["点「在干净 PDF 上框选」","拖框 → 添加当前框","跨页/跨栏继续添加片段","保存框选"],
+    system:["保存 manual_segments","若框选页与原识别页不同，同步整页其他题页码","导出时优先使用手动框"],
+    notes:["可自动裁切的题不用框","框的是干净 PDF，不是学生照片","只有判为错题的才会进最终 PDF"]
+  },
+  {
+    id:"s10", type:"review", tag:"整页", title:"整页查看（可跳过）",
+    summary:"需要时通览本页全部题，不强制逐项。",
+    goal:"给老师最后一眼检查机会。",
+    teacher:["切换「整页查看」","可跳过未确认并继续","全部页处理完返回列表"],
+    system:["完成本页只标记 review_completed","PDF 仍延迟到最终生成"],
+    notes:["这是质量放行，不是全量重做"]
+  },
+  {
+    id:"s11", type:"export", tag:"导出", title:"生成错题集",
+    summary:"只有这一步才真正写出学生错题 PDF。",
+    goal:"按当前确认结果，从干净 PDF 裁题导出。",
+    teacher:["回任务首页","点「生成错题集」","若还有未完成页，可去处理或按当前结果生成"],
+    system:["优先：手动框选 > 页码+题号索引 > reference_bbox 兜底","只导出 decision=wrong 的题","未完成页默认拦截，避免误清状态"],
+    notes:["改判定/改页/框选后需再点生成才会更新 PDF"]
+  },
+  {
+    id:"s12", type:"export", tag:"交付", title:"打开输出目录拿 PDF",
+    summary:"每位学生一份错题集 PDF。",
+    goal:"交付可用结果。",
+    teacher:["点打开输出目录","检查 PDF 内容是否正确"],
+    system:["输出如：学生名/学生名_物理错题集.pdf","保留 review_manifest 便于继续修改"],
+    notes:["同 PDF 下次识别会复用索引缓存，显著减少调用"]
+  }
+];
+
+const flow = document.getElementById("flow");
+const detail = document.getElementById("detail");
+
+function renderFlow() {
+  const groups = [
+    ["准备与输入", ["s1","s2","s3"]],
+    ["AI 识别", ["s4","s5"]],
+    ["人工确认与纠偏", ["s6","s7","s8","s9","s10"]],
+    ["导出交付", ["s11","s12"]]
+  ];
+  flow.innerHTML = "";
+  groups.forEach((group, gi) => {
+    const lane = document.createElement("div");
+    lane.className = "lane-title";
+    lane.textContent = group[0];
+    flow.appendChild(lane);
+    group[1].forEach((id, idx) => {
+      const step = steps.find(s => s.id === id);
+      const node = document.createElement("article");
+      node.className = "node " + step.type;
+      node.dataset.id = step.id;
+      node.innerHTML =
+        '<div class="kicker"><span class="tag">' + step.tag +
+        '</span><span style="font-size:12px;color:#94a3b8">' + (gi+1) + '.' + (idx+1) +
+        '</span></div><h3>' + step.title + '</h3><p>' + step.summary + '</p>';
+      node.onclick = () => select(step.id);
+      flow.appendChild(node);
+      if (!(gi === groups.length - 1 && idx === group[1].length - 1)) {
+        const arrow = document.createElement("div");
+        arrow.className = "arrow";
+        arrow.textContent = "↓";
+        flow.appendChild(arrow);
+      }
+    });
+  });
+}
+
+function li(list) {
+  return list.map(x => "<li>" + x + "</li>").join("");
+}
+
+function select(id) {
+  const step = steps.find(s => s.id === id);
+  document.querySelectorAll(".node").forEach(n => n.classList.toggle("active", n.dataset.id === id));
+  detail.innerHTML =
+    "<h3>" + step.title + "</h3>" +
+    '<div class="badge-row"><span class="tag">' + step.tag + "</span></div>" +
+    '<p style="margin:0 0 8px;color:var(--muted);line-height:1.6">' + step.summary + "</p>" +
+    '<div class="section"><h4>目标</h4><ul><li>' + step.goal + "</li></ul></div>" +
+    '<div class="section"><h4>老师做什么</h4><ul>' + li(step.teacher) + "</ul></div>" +
+    '<div class="section"><h4>系统做什么</h4><ul>' + li(step.system) + "</ul></div>" +
+    '<div class="section"><h4>注意点</h4><ul>' + li(step.notes) + "</ul></div>";
+  history.replaceState(null, "", "#" + id);
+}
+
+document.querySelectorAll("[data-jump]").forEach(btn => {
+  btn.onclick = () => {
+    select(btn.dataset.jump);
+    document.querySelector('[data-id="' + btn.dataset.jump + '"]')?.scrollIntoView({behavior:"smooth", block:"center"});
+  };
+});
+
+renderFlow();
+const initial = location.hash.replace("#", "") || "s1";
+select(steps.some(s => s.id === initial) ? initial : "s1");
+</script>
+</body>
+</html>

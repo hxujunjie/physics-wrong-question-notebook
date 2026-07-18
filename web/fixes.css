@@ -1,0 +1,17 @@
+[hidden]{display:none!important}
+.modal[hidden]{display:none!important}
+.export-actions{display:flex;gap:10px;align-items:center;margin-top:16px}
+.export-actions #finalize{margin-top:0}
+.operation{display:flex;gap:6px}
+.mode-tabs{display:flex;gap:6px;margin:0 0 12px}
+.mode-tabs button{flex:1}
+.setup select,.setup input[type=text],.setup input[type=password]{width:100%;box-sizing:border-box;margin:4px 0 10px;padding:8px 10px;border:1px solid var(--border,#d2d2d7);border-radius:10px;background:#fff}
+.setup #model-select{font-size:13px}
+.setup input.readonly-field{background:var(--surface-alt,#f5f5f7);color:var(--secondary,#6e6e73);cursor:default}
+.setup #model-hint{display:block;color:var(--secondary,#6e6e73);font-size:12px;margin-top:-6px;margin-bottom:8px}
+/* AI-only clean-PDF manual crop editor */
+.crop-dialog { max-width: 900px; width: min(92vw, 900px); }
+.crop-canvas-wrap { position: relative; max-height: 62vh; overflow: auto; background: #222; margin: 12px 0; text-align: center; }
+.crop-canvas-wrap img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+#crop-canvas { position: absolute; inset: 0; margin: auto; cursor: crosshair; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }

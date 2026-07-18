@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE / 本地 AI 会话
+.vscode/
+.idea/
+.agents/
+.claude/
+.codex/
+*.swp
+*.swo
+
+# 操作系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志/临时文件
+*.log
+*.tmp
+_runtime/
+
+# 本地构建、打包与测试运行产物
+artifacts/
+build/
+build*/
+dist/
+dist*/
+tmp/
+test_*/
+.playwright-cli/
+
+# 手工调试截图/样例（正式测试代码仍位于 tests/）
+test_*.jpg
+test_*.png
+
+# —— 公开仓库隐私与大文件（本地仍可保留，仅不提交）——
+# 真实学生作业目录（含姓名）
+feishu_homework_by_student/
+
+# PyInstaller 交付包 / 压缩包（单包约 280MB，请用 GitHub Releases）
+release/
+*.exe
+*.zip
+
+# 运行时数据与缓存
+data/
+output/
+
+# 原始练习册与批改样例（含可识别作业内容；请自备素材）
+*.pdf
+970d3d5fd7ecb934754608327358595c.jpg
+导学案-物理必修一-练习题.pdf
+
+# 本地密钥/配置（若将来落盘到仓库旁）
+*.local.json
+.env
+.env.*
+**/ai_settings.json
+**/grok_settings.json

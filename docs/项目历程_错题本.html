@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>物理错题本 · 项目历程</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #647089;
+      --line: #e4e8ef;
+      --page: #f5f7fb;
+      --card: rgba(255, 255, 255, .88);
+      --blue: #0a84ff;
+      --blue-soft: #eaf4ff;
+      --green: #18a66a;
+      --orange: #f39c12;
+      --purple: #7b61ff;
+      --shadow: 0 16px 40px rgba(32, 54, 92, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 0%, #dceeff 0, transparent 26rem),
+        radial-gradient(circle at 94% 9%, #eee8ff 0, transparent 30rem),
+        var(--page);
+      font-family: "SF Pro Display", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    .shell { width: min(1160px, calc(100% - 40px)); margin: 0 auto; }
+    .hero { padding: 66px 0 38px; }
+    .eyebrow, .tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 11px; border-radius: 999px;
+      color: #1668be; background: var(--blue-soft);
+      font-size: 13px; font-weight: 700; letter-spacing: .02em;
+    }
+    h1 { margin: 16px 0 12px; font-size: clamp(37px, 7vw, 68px); line-height: 1.08; letter-spacing: -.055em; }
+    .hero p { max-width: 700px; margin: 0; color: var(--muted); font-size: 18px; }
+    .hero-grid { display: grid; grid-template-columns: 1.65fr .95fr; gap: 18px; margin-top: 32px; }
+    .glass, .card {
+      border: 1px solid rgba(255,255,255,.8); background: var(--card);
+      box-shadow: var(--shadow); border-radius: 24px;
+    }
+    .story-card { padding: 28px; min-height: 240px; }
+    .story-card h2 { margin: 0 0 12px; font-size: 22px; letter-spacing: -.025em; }
+    .story-card p { margin: 0; color: var(--muted); }
+    .principles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 22px; }
+    .principle { padding: 12px; border-radius: 14px; background: #f6f8fc; font-size: 14px; color: #43506a; }
+    .principle b { display: block; color: var(--ink); font-size: 15px; }
+    .numbers { display: grid; grid-template-rows: repeat(3, 1fr); overflow: hidden; }
+    .metric { padding: 20px 24px; border-bottom: 1px solid var(--line); }
+    .metric:last-child { border-bottom: 0; }
+    .metric strong { display: block; color: var(--blue); font-size: 31px; line-height: 1.05; letter-spacing: -.04em; }
+    .metric span { color: var(--muted); font-size: 14px; }
+
+    main { padding-bottom: 70px; }
+    section { margin-top: 48px; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 18px; }
+    h2 { margin: 0; font-size: 28px; letter-spacing: -.035em; }
+    .section-title p { margin: 0; color: var(--muted); }
+
+    .flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; padding: 20px; }
+    .flow-step { position: relative; min-height: 120px; padding: 14px 8px; text-align: center; }
+    .flow-step:not(:last-child)::after {
+      content: "→"; position: absolute; right: -10px; top: 43px;
+      color: #b7c1d0; font-size: 22px; z-index: 2;
+    }
+    .flow-icon { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 9px; border-radius: 14px; background: var(--blue-soft); color: var(--blue); font-size: 21px; }
+    .flow-step:nth-child(3) .flow-icon { background: #eaf9f2; color: var(--green); }
+    .flow-step:nth-child(5) .flow-icon { background: #fff4e6; color: var(--orange); }
+    .flow-step:nth-child(6) .flow-icon { background: #f1edff; color: var(--purple); }
+    .flow-step b { display: block; font-size: 14px; }
+    .flow-step span { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+    .timeline { position: relative; margin-left: 16px; padding-left: 33px; border-left: 2px solid #dce4ef; }
+    .milestone { position: relative; display: grid; grid-template-columns: 150px 1fr; gap: 20px; padding: 0 0 26px; }
+    .milestone::before { content: ""; position: absolute; width: 13px; height: 13px; border: 3px solid white; border-radius: 50%; left: -41px; top: 5px; background: var(--blue); box-shadow: 0 0 0 2px #b9d9ff; }
+    .milestone:nth-child(3n+2)::before { background: var(--green); box-shadow: 0 0 0 2px #bde8d2; }
+    .milestone:nth-child(3n)::before { background: var(--purple); box-shadow: 0 0 0 2px #d9d0ff; }
+    .when { padding-top: 1px; color: var(--blue); font-size: 14px; font-weight: 800; }
+    .milestone .card { padding: 19px 21px; }
+    .milestone h3 { margin: 0 0 5px; font-size: 18px; letter-spacing: -.02em; }
+    .milestone p { margin: 0; color: var(--muted); font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .chip { padding: 4px 8px; border-radius: 8px; background: #f0f4f9; color: #52617a; font-size: 12px; font-weight: 650; }
+
+    .challenge-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .challenge { padding: 23px; }
+    .challenge .problem { color: #a14b38; font-size: 13px; font-weight: 800; }
+    .challenge h3 { margin: 6px 0; font-size: 19px; letter-spacing: -.02em; }
+    .challenge p { margin: 0; color: var(--muted); font-size: 14px; }
+    .solution { margin-top: 14px; padding: 11px 13px; border-left: 3px solid var(--green); border-radius: 0 10px 10px 0; background: #f2fbf6; color: #347052; font-size: 13px; }
+
+    .final { display: grid; grid-template-columns: 1.2fr .8fr; overflow: hidden; }
+    .final-main { padding: 32px; background: linear-gradient(135deg, #0879e8, #4f46e5); color: white; }
+    .final-main h2 { font-size: 31px; }
+    .final-main p { color: rgba(255,255,255,.78); }
+    .final-list { margin: 20px 0 0; padding: 0; list-style: none; }
+    .final-list li { margin: 9px 0; }
+    .final-list li::before { content: "✓"; margin-right: 9px; font-weight: 900; }
+    .delivery { padding: 30px; background: rgba(255,255,255,.94); }
+    .delivery h3 { margin: 0 0 10px; font-size: 20px; }
+    .delivery p { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+    .delivery-item { margin: 8px 0; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+    footer { padding: 24px 0 40px; color: #7d8799; font-size: 13px; text-align: center; }
+
+    @media (max-width: 800px) {
+      .hero { padding-top: 38px; }
+      .hero-grid, .final, .challenge-grid { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: repeat(2, 1fr); }
+      .flow-step:not(:last-child)::after { display: none; }
+      .milestone { grid-template-columns: 1fr; gap: 5px; }
+      .when { font-size: 13px; }
+      .section-title { display: block; }
+      .section-title p { margin-top: 6px; }
+    }
+
+    @media print {
+      body { background: white; }
+      .shell { width: 100%; }
+      .hero { padding-top: 15mm; }
+      .glass, .card { box-shadow: none; break-inside: avoid; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell hero">
+    <span class="eyebrow">◌ PROJECT JOURNEY · 2026.07</span>
+    <h1>从一张作业照片，<br>到一套可交付的错题系统。</h1>
+    <p>物理错题本不是把图片“识别一下”就结束，而是建立一条可验证的本地闭环：批改痕迹定位错误，原练习册 PDF 提供唯一题目真源，最终生成可读、完整、可交付的错题集。</p>
+
+    <div class="hero-grid">
+      <article class="glass story-card">
+        <h2>项目的核心转变</h2>
+        <p>最初目标是“找出错题”；经过多轮真实照片、真实练习册和真实批处理验证后，目标升级为“可靠地给每个学生交付一份正确、完整、排版清晰的 PDF 错题集”。</p>
+        <div class="principles">
+          <div class="principle"><b>内容真源</b>干净 PDF 是题目内容的唯一来源</div>
+          <div class="principle"><b>照片职责</b>作业照片只负责说明哪道题错了</div>
+          <div class="principle"><b>完整优先</b>跨栏、跨页题必须保留全部内容</div>
+          <div class="principle"><b>离线可用</b>不上传学生作业，不依赖在线 AI</div>
+        </div>
+      </article>
+      <aside class="glass numbers">
+        <div class="metric"><strong>67 页</strong><span>真实练习册的源 PDF 索引</span></div>
+        <div class="metric"><strong>37 项</strong><span>最终源码回归测试全部通过</span></div>
+        <div class="metric"><strong>2 个产品</strong><span>学生端 + 教师端未压缩交付</span></div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section>
+      <div class="section-title">
+        <div><span class="tag">系统闭环</span><h2>一条题目从照片到 PDF 的旅程</h2></div>
+        <p>照片不进入最终题目内容，原 PDF 才进入。</p>
+      </div>
+      <div class="glass flow">
+        <div class="flow-step"><div class="flow-icon">▣</div><b>干净 PDF</b><span>题目真源<br>统一裁剪基准</span></div>
+        <div class="flow-step"><div class="flow-icon">▧</div><b>作业照片</b><span>图片 / 文件夹<br>ZIP 批量导入</span></div>
+        <div class="flow-step"><div class="flow-icon">⌗</div><b>页面配准</b><span>定位对应 PDF 页<br>映射笔迹坐标</span></div>
+        <div class="flow-step"><div class="flow-icon">✓</div><b>勾叉判断</b><span>叉 = 错题<br>勾 = 排除</span></div>
+        <div class="flow-step"><div class="flow-icon">⌑</div><b>题目索引</b><span>题号、双栏<br>跨栏、跨页边界</span></div>
+        <div class="flow-step"><div class="flow-icon">▤</div><b>原图裁剪</b><span>题干、图、选项<br>完整原始片段</span></div>
+        <div class="flow-step"><div class="flow-icon">▥</div><b>错题 PDF</b><span>A4 双栏阅读流<br>学生专属交付</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <div><span class="tag">版本时间线</span><h2>从技术验证到正式双端交付</h2></div>
+        <p>每一轮迭代都来自真实数据暴露出的边界问题。</p>
+      </div>
+      <div class="timeline">
+        <article class="milestone">
+          <div class="when">07·12<br>Phase 1</div>
+          <div class="card"><h3>原型：证明“照片能回到原题”</h3><p>建立干净 PDF 渲染、作业照片透视矫正、页面特征匹配、红笔提取、坐标配准和候选题裁剪。原始 PDF 与照片全程 SHA-256 校验。</p><div class="chips"><span class="chip">离线处理</span><span class="chip">页面匹配</span><span class="chip">红笔定位</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·13<br>学生端 1.0 → 2.0</div>
+          <div class="card"><h3>产品化：从脚本变为学生可用应用</h3><p>加入练习册管理、图片 / 文件夹 / ZIP 导入、错题保存、PDF 导出、去重与待确认机制。学生可以自己整理个人错题本。</p><div class="chips"><span class="chip">练习册</span><span class="chip">个人数据</span><span class="chip">PDF 导出</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·13<br>教师端 1.0</div>
+          <div class="card"><h3>批量化：按学生文件夹整理全班错题</h3><p>读取“学生姓名 / 作业照片”目录，逐人处理、合并重复题、生成个人 PDF，并把照片与分析文件放入内部缓存，交付目录只留下 PDF。</p><div class="chips"><span class="chip">批量处理</span><span class="chip">学生去重</span><span class="chip">内部缓存</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·13<br>2.0.7 → 2.0.8</div>
+          <div class="card"><h3>可靠性：OCR 冻结环境与辅助 PDF 索引</h3><p>修复 exe 内 RapidOCR 动态模块加载；支持 OCR 辅助 PDF 仅用于建立题目边界，最终题目仍从原始干净 PDF 裁取。</p><div class="chips"><span class="chip">RapidOCR</span><span class="chip">PyInstaller</span><span class="chip">OCR 辅助索引</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·13<br>2.0.9 → 2.0.15</div>
+          <div class="card"><h3>内容质量：完整题目与原排版阅读感</h3><p>重做双栏阅读流、原图高分辨率嵌入、同页跨栏 / 跨页续题、页码与小数误识别过滤、章节标题排除，以及待确认题目的人工处理入口。</p><div class="chips"><span class="chip">双栏流式 PDF</span><span class="chip">跨栏续题</span><span class="chip">高分辨率</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·14<br>2.1.0 / 1.2.0</div>
+          <div class="card"><h3>体验升级：学生端与教师端 macOS 风格重构</h3><p>统一设计系统、侧边导航、拖放导入、待确认主从视图、教师端任务面板与状态表格。功能不变，但交互从“工程工具”变成“可交付产品”。</p><div class="chips"><span class="chip">共享 UI 系统</span><span class="chip">浅色界面</span><span class="chip">双端一致</span></div></div>
+        </article>
+        <article class="milestone">
+          <div class="when">07·14<br>最终 2.1.1 / 1.2.1</div>
+          <div class="card"><h3>最后一公里：跨页页眉不再混入题目</h3><p>第 6 题真实回归暴露出续页从顶部裁剪会带入“导学案 / 高中物理 / 必修1”。新版从首行正文开始，忽略页眉、章节标题与伪题号，并使旧缓存自动失效后重新识别。</p><div class="chips"><span class="chip">正文起点识别</span><span class="chip">缓存版本迁移</span><span class="chip">双端 exe 回归</span></div></div>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <div><span class="tag">关键攻坚</span><h2>最容易做错的四件事，如何被逐一修正</h2></div>
+      </div>
+      <div class="challenge-grid">
+        <article class="card challenge"><span class="problem">问题 01 · 图片不是题目真源</span><h3>学生照片里有笔迹、阴影和形变</h3><p>直接从照片裁题会把批注写入错题集，也会因拍摄角度损坏原题排版。</p><div class="solution">解决：照片只定位错题；题图一律从干净 PDF 原图裁取。</div></article>
+        <article class="card challenge"><span class="problem">问题 02 · 红勾曾被误判为红叉</span><h3>一次线段相交不等于“叉”</h3><p>大勾在倾斜、裁切时也可能产生两条相交线，导致正确题被错误导出。</p><div class="solution">解决：结合骨架端点、交叉节点、方向组与边缘容错；勾不进入错题集。</div></article>
+        <article class="card challenge"><span class="problem">问题 03 · 双栏不是两张独立纸</span><h3>左栏底部可以接右栏顶部</h3><p>原练习册按“左栏从上到下，再右栏从上到下”阅读；一题可以跨栏甚至跨页。</p><div class="solution">解决：题目索引按阅读流组织，按自然片段边界拼接，不裁半道题。</div></article>
+        <article class="card challenge"><span class="problem">问题 04 · 续页顶部不一定是题目</span><h3>页眉与章节标题会混进题图</h3><p>跨页裁剪若从页面固定高度开始，品牌页眉、课时标题和伪题号会被拼入错题。</p><div class="solution">解决：从 OCR 识别出的首个正文行开始，到下一道正式题号前结束。</div></article>
+      </div>
+    </section>
+
+    <section class="glass final">
+      <div class="final-main">
+        <span class="eyebrow" style="background:rgba(255,255,255,.18);color:white">FINAL DELIVERY</span>
+        <h2>现在交付的，<br>是一条经过真实数据验证的闭环。</h2>
+        <p>最新验证使用真实 PDF、真实作业照片和教师端学生目录完成。每一端都有独立 exe，也共享同一套裁题与 PDF 正确性逻辑。</p>
+        <ul class="final-list"><li>学生端：v2.1.1</li><li>教师端：v1.2.1</li><li>源码回归：37 项通过</li><li>学生端真实回归：第 66 页、1 叉 5 勾、0 待确认</li></ul>
+      </div>
+      <div class="delivery">
+        <h3>最终交付形态</h3>
+        <p>两个未压缩文件夹。解压概念不存在，直接进入对应目录运行 exe。</p>
+        <div class="delivery-item">🎓 学生端：个人练习册、作业导入、待确认、错题 PDF</div>
+        <div class="delivery-item">🏫 教师端：学生目录批量处理、个人 PDF、班级汇总</div>
+        <div class="delivery-item">🔒 本地处理：不上传 PDF、照片或学生作业</div>
+      </div>
+    </section>
+  </main>
+  <footer class="shell">物理错题本 · 项目历程 · 最终版本 2026-07-14</footer>
+</body>
+</html>

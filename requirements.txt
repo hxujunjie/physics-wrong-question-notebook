@@ -1,0 +1,12 @@
+# 物理练习册错题自动整理系统 - 教师端开发依赖
+# PDF 裁剪、复核与导出在本地完成；识别阶段通过所选 AI 服务商发送压缩后的页面图片。
+# 一键启动器以 requirements-browser.lock.txt 为准。
+
+opencv-python==5.0.0.93
+PyMuPDF==1.28.0
+numpy==2.5.1
+Pillow==11.3.0
+scikit-image==0.26.0
+rapidocr-onnxruntime==1.2.3
+onnxruntime==1.27.0
+openai==2.45.0
