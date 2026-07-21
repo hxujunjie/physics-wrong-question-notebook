@@ -126,18 +126,39 @@ class WebTeacherTests(unittest.TestCase):
                 {
                     "recognition_json": str(self.json),
                     "clean_pdf": str(self.pdf),
+                    "photo_root": str(self.project),
                     "output_root": str(self.root / "导入输出"),
                 },
             ).read()
         )
         self.assertIn(data["status"], {"success", "partial"})
         self.assertTrue(Path(data["output_dir"]).is_dir())
+        self.assertEqual(data["summary"]["student_count"], 1)
         from urllib.parse import quote
 
         students = json.loads(
             self.request(f"/api/students?output_dir={quote(data['output_dir'])}").read()
         )["students"]
         self.assertEqual(students[0]["student"], "学生甲")
+
+    def test_import_recognition_requires_photo_root(self):
+        from urllib.error import HTTPError
+
+        try:
+            self.request(
+                "/api/import-recognition",
+                "POST",
+                {
+                    "recognition_json": str(self.json),
+                    "clean_pdf": str(self.pdf),
+                    "output_root": str(self.root / "导入输出2"),
+                },
+            )
+            self.fail("expected HTTPError")
+        except HTTPError as exc:
+            self.assertEqual(exc.code, 400)
+            body = json.loads(exc.read().decode("utf-8"))
+            self.assertIn("照片", body.get("error", ""))
 
     def test_manual_crop_endpoint_records_teacher_source(self):
         recognition_import.import_recognition_result(self.json, self.pdf, self.output)

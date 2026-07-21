@@ -1,6 +1,6 @@
 # 物理练习册错题自动整理系统
 
-教师端：**v1.6.1（多服务商智能识别）**
+教师端：**v1.6.2（多服务商智能识别 + 导入 JSON 路径优化）**
 
 教师选择干净练习册 PDF + 学生作业照片目录 → 在线 AI 识别红笔批改 → 人工只复核异常项 → 从干净 PDF 裁题导出个人错题集。
 
@@ -8,12 +8,13 @@
 
 **无需安装 Python。** 下载交付包 → 解压 → 双击即可使用：
 
-- **发布页：** https://github.com/hxujunjie/physics-wrong-question-notebook/releases/tag/v1.6.1  
-- **直接下载：** [physics-wrong-book-teacher-v1.6.1.zip](https://github.com/hxujunjie/physics-wrong-question-notebook/releases/download/v1.6.1/physics-wrong-book-teacher-v1.6.1.zip)
+- **发布页：** https://github.com/hxujunjie/physics-wrong-question-notebook/releases/tag/v1.6.2  
+- **直接下载：** [physics-wrong-book-teacher-v1.6.2.zip](https://github.com/hxujunjie/physics-wrong-question-notebook/releases/download/v1.6.2/physics-wrong-book-teacher-v1.6.2.zip)  
+  （若 1.6.2 尚未挂上，可暂用 [v1.6.1](https://github.com/hxujunjie/physics-wrong-question-notebook/releases/tag/v1.6.1)）
 
 ### 三步上手
 
-1. 下载并解压 `physics-wrong-book-teacher-v1.6.1.zip`
+1. 下载并解压教师端交付 zip
 2. 进入文件夹，双击 `启动教师端.bat` 或 `physics-wrong-book-teacher.exe`
 3. 在浏览器中：粘贴 API Key → 选择干净练习册 PDF 与学生照片目录 → 识别 → 复核 → 生成错题集
 

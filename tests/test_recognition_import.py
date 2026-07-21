@@ -73,12 +73,14 @@ class RecognitionImportTests(unittest.TestCase):
         self.assertIsNone(recognition_import.crop_imported_question(manifest, page, question))
 
     def test_same_pdf_hash_allows_clean_pdf_index(self):
+        # UI-selected clean PDF is authoritative; import always binds to it (path match).
         copied = self.root / "另一个目录" / "clean.pdf"; copied.parent.mkdir(); copied.write_bytes(self.pdf.read_bytes())
         path = self.write(self.payload())
         result, issues, *_ = recognition_import.validate_recognition(path, copied)
         self.assertFalse([issue for issue in issues if "PDF" in issue.reason])
         self.assertTrue(result["images"][0]["selected_pdf_matches"])
-        self.assertEqual(result["images"][0]["pdf_match_reason"], "sha256")
+        self.assertEqual(result["images"][0]["pdf_match_reason"], "path")
+        self.assertEqual(result["images"][0]["matched_reference_file"], str(copied.resolve()))
 
     def test_pdf_crop_and_next_page_can_save_unresolved(self):
         path=self.write(self.payload()); recognition_import.import_recognition_result(path, self.pdf, self.output)
@@ -121,6 +123,27 @@ class RecognitionImportTests(unittest.TestCase):
     def test_legacy_doubao_import_module_still_imports(self):
         from src import doubao_import
         self.assertIs(doubao_import.import_recognition_result, recognition_import.import_recognition_result)
+
+    def test_filename_only_photo_resolves_via_photo_root(self):
+        """Teachers/Grok can write basename only; UI supplies photo_root + clean PDF."""
+        data = self.payload()
+        data["images"][0]["photo_file"] = "附件08.jpg"
+        data["images"][0].pop("matched_reference_file", None)
+        data["images"][0]["pdf_page"] = "1"  # string page from external models
+        path = self.write(data)
+        photo_root = self.root / "students"
+        summary = recognition_import.import_recognition_result(
+            path, self.pdf, self.output / "by_name", photo_root=photo_root
+        )
+        self.assertEqual(summary["student_count"], 1)
+        manifest = review_workspace.load_manifest(
+            self.output / "by_name" / "_cache" / "学生甲" / "review_manifest.json"
+        )
+        photo_path = Path(manifest["photo_tasks"][0]["photo_path"])
+        self.assertTrue(photo_path.is_file())
+        self.assertEqual(photo_path.name, "附件08.jpg")
+        self.assertEqual(manifest["clean_pdf_path"], str(self.pdf.resolve()))
+        self.assertEqual(manifest["photo_tasks"][0]["matched_pdf_page"], 1)
 
 
 

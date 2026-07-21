@@ -16,7 +16,7 @@ import cv2
 from . import ai_settings, config, recognition_import, recognition_pipeline, render_pdf, review_workspace, teacher_pipeline
 from .ai_client import AiClient
 
-APP_VERSION = "1.6.1"
+APP_VERSION = "1.6.2"
 
 # Windows browsers often abort keep-alive sockets while the handler is still writing.
 _CLIENT_DISCONNECT_ERRORS = (
@@ -508,13 +508,22 @@ class WebTeacherHandler(BaseHTTPRequestHandler):
             return self._json({"error": "识别任务进行中，暂不能导入"}, 409)
         json_path = Path(str(data.get("recognition_json") or "")).expanduser()
         clean_pdf = Path(str(data.get("clean_pdf") or "")).expanduser()
+        photo_root_raw = str(data.get("photo_root") or "").strip()
         if not json_path.is_file():
             raise ValueError("请选择 recognition_result.json")
         if not clean_pdf.is_file() or clean_pdf.suffix.lower() != ".pdf":
             raise ValueError("请选择干净练习册 PDF")
-        output_root = data.get("output_root") or str(json_path.parent / "错题集输出")
+        if not photo_root_raw:
+            raise ValueError("请选择学生照片总目录（与在线识别相同）")
+        photo_root = Path(photo_root_raw).expanduser()
+        if not photo_root.is_dir():
+            raise ValueError("请选择学生照片总目录（与在线识别相同）")
+        # Default next to photo pack (same mental model as online path hints).
+        output_root = data.get("output_root") or str(photo_root.parent / "错题集输出")
         output_dir = recognition_pipeline.make_output_dir(output_root, clean_pdf)
-        summary = recognition_import.import_recognition_result(json_path, clean_pdf, output_dir)
+        summary = recognition_import.import_recognition_result(
+            json_path, clean_pdf, output_dir, photo_root=photo_root
+        )
         with self.server.job_lock:
             self.server.job = {
                 "status": summary.get("status", "success"),

@@ -315,8 +315,9 @@ function setWorkMode(mode) {
   $("import-settings").hidden = online;
   $("batch").hidden = !online;
   $("import-json").hidden = online;
-  $("photo-root-label").hidden = !online;
-  $("photo-root-btn").hidden = !online;
+  // Keep photo root visible in both modes so import matches online UX.
+  $("photo-root-label").hidden = false;
+  $("photo-root-btn").hidden = false;
   ready();
 }
 
@@ -334,9 +335,10 @@ function ready() {
   } else {
     if (!state.paths.recognition_json) missing.push("识别结果 JSON");
     if (!state.paths.clean_pdf) missing.push("干净 PDF");
+    if (!state.paths.photo_root) missing.push("学生照片总目录");
     $("path-hint").textContent = missing.length
       ? `还缺少：${missing.join("、")}`
-      : "可直接导入 JSON，无需 API Key。";
+      : "已选齐 PDF、照片目录与 JSON；一点导入即可（无需 API Key；路径由软件绑定）。";
     $("import-json").disabled = missing.length > 0;
     $("batch").disabled = true;
   }
@@ -1024,6 +1026,7 @@ $("import-json").onclick = async () => {
     const started = await api("/api/import-recognition", "POST", {
       recognition_json: state.paths.recognition_json,
       clean_pdf: state.paths.clean_pdf,
+      photo_root: state.paths.photo_root,
       output_root: state.paths.output_root || undefined
     });
     state.paths.output_dir = started.output_dir;
@@ -1031,7 +1034,15 @@ $("import-json").onclick = async () => {
     savePaths();
     $("open").hidden = false;
     $("finalize").hidden = false;
-    notice("JSON 已导入，可开始复核");
+    const s = started.summary || {};
+    const issueN = Array.isArray(s.issues) ? s.issues.length : 0;
+    const bits = [
+      `学生 ${s.student_count ?? "—"}`,
+      `照片 ${s.photo_count ?? "—"}`,
+      `待确认题 ${s.review_count ?? "—"}`,
+    ];
+    if (issueN) bits.push(`校验提示 ${issueN} 条（见输出目录 recognition_import/import_issues.json）`);
+    notice(`JSON 已导入，可开始复核 · ${bits.join(" · ")}`);
     await refresh();
   } catch (e) { fail(e); }
 };

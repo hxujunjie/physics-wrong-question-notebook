@@ -73,6 +73,74 @@ def _relative_path(root: Path, value: Any, field: str, issues: list[ImportIssue]
         issues.append(ImportIssue(source, field, "路径无法解析")); return None
 
 
+def _existing_file(path: Path | None) -> Path | None:
+    if path is None:
+        return None
+    try:
+        resolved = path.expanduser().resolve()
+    except OSError:
+        return None
+    return resolved if resolved.is_file() else None
+
+
+def _resolve_photo_path(
+    value: Any,
+    *,
+    root: Path,
+    photo_root: Path | None,
+    student: str,
+    field: str,
+    issues: list[ImportIssue],
+    source: str,
+) -> Path | None:
+    """Resolve photo path; optional photo_root allows filename-only JSON for teachers."""
+    if not isinstance(value, str) or not value.strip():
+        issues.append(ImportIssue(source, field, "缺少路径"))
+        return None
+    raw = Path(value.strip().replace("/", "\\"))
+    candidates: list[Path] = []
+    if raw.is_absolute():
+        candidates.append(raw)
+    else:
+        candidates.append(root / raw)
+    if photo_root is not None:
+        pr = photo_root.expanduser().resolve()
+        candidates.append(pr / student / raw.name)
+        candidates.append(pr / raw)
+        if not raw.is_absolute():
+            candidates.append(pr / student / raw)
+    for candidate in candidates:
+        found = _existing_file(candidate)
+        if found is not None:
+            return found
+    # Unique basename under student folder (supports nested camera dumps).
+    if photo_root is not None:
+        student_dir = photo_root.expanduser().resolve() / student
+        if student_dir.is_dir():
+            matches = [p for p in student_dir.rglob(raw.name) if p.is_file()]
+            if len(matches) == 1:
+                return matches[0].resolve()
+            if len(matches) > 1:
+                issues.append(ImportIssue(source, field, f"学生目录下存在多个同名文件：{raw.name}"))
+                return None
+    issues.append(ImportIssue(source, field, "照片文件不存在或不可读"))
+    return None
+
+
+def _coerce_pdf_page(value: Any) -> int | None | object:
+    """Return int page >=1, None if missing, or Ellipsis if invalid."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return Ellipsis
+    if isinstance(value, int):
+        return value if value >= 1 else Ellipsis
+    if isinstance(value, str) and value.strip().isdigit():
+        number = int(value.strip())
+        return number if number >= 1 else Ellipsis
+    return Ellipsis
+
+
 def _bbox(value: Any, field: str, issues: list[ImportIssue], source: str) -> list[float] | None:
     if not isinstance(value, list) or len(value) != 4:
         issues.append(ImportIssue(source, field, "必须是包含 4 个数字的 bbox")); return None
@@ -96,7 +164,11 @@ def _confidence(value: Any, field: str, issues: list[ImportIssue], source: str) 
     return number
 
 
-def validate_recognition(path: str | Path, selected_pdf: str | Path | None = None) -> tuple[dict, list[ImportIssue], Path, Path]:
+def validate_recognition(
+    path: str | Path,
+    selected_pdf: str | Path | None = None,
+    photo_root: str | Path | None = None,
+) -> tuple[dict, list[ImportIssue], Path, Path]:
     json_path, root = resolve_input(path)
     issues: list[ImportIssue] = []
     try:
@@ -115,6 +187,12 @@ def validate_recognition(path: str | Path, selected_pdf: str | Path | None = Non
     if selected is not None and (not selected.is_file() or selected.suffix.lower() != ".pdf"):
         issues.append(ImportIssue(str(selected), "selected_pdf", "所选原始练习册 PDF 不存在或不可读取"))
         selected = None
+    photo_root_path: Path | None = None
+    if photo_root:
+        photo_root_path = Path(photo_root).expanduser().resolve()
+        if not photo_root_path.is_dir():
+            issues.append(ImportIssue(str(photo_root_path), "photo_root", "学生照片总目录不存在或不可用"))
+            photo_root_path = None
     selected_hash = _sha256(selected) if selected is not None else None
     reference_hashes: dict[Path, str | None] = {}
     validated: list[dict] = []
@@ -127,26 +205,45 @@ def validate_recognition(path: str | Path, selected_pdf: str | Path | None = Non
         student = image.get("student_name")
         if not isinstance(student, str) or not student.strip():
             issues.append(ImportIssue(str(json_path), prefix + ".student_name", "必须是非空字符串")); continue
-        photo = _relative_path(root, image.get("photo_file"), prefix + ".photo_file", issues, str(json_path))
-        reference = _relative_path(root, image.get("matched_reference_file"), prefix + ".matched_reference_file", issues, str(json_path))
-        if photo is None or not photo.is_file():
-            issues.append(ImportIssue(str(json_path), prefix + ".photo_file", "照片文件不存在或不可读")); continue
-        if reference is not None and (not reference.is_file() or reference.suffix.lower() != ".pdf"):
-            issues.append(ImportIssue(str(json_path), prefix + ".matched_reference_file", "PDF 不存在、不可读或不是 PDF")); reference = None
-        page = image.get("pdf_page")
+        student_name = student.strip()
+        photo = _resolve_photo_path(
+            image.get("photo_file"),
+            root=root,
+            photo_root=photo_root_path,
+            student=student_name,
+            field=prefix + ".photo_file",
+            issues=issues,
+            source=str(json_path),
+        )
+        if photo is None:
+            continue
+        # Prefer the clean PDF chosen in the UI so teachers/Grok need not embed PDF paths.
+        if selected is not None:
+            reference = selected
+        else:
+            reference = _relative_path(
+                root, image.get("matched_reference_file"), prefix + ".matched_reference_file", issues, str(json_path)
+            )
+            if reference is not None and (not reference.is_file() or reference.suffix.lower() != ".pdf"):
+                issues.append(ImportIssue(str(json_path), prefix + ".matched_reference_file", "PDF 不存在、不可读或不是 PDF"))
+                reference = None
+        page = _coerce_pdf_page(image.get("pdf_page"))
         page_index = None
-        if page is not None:
-            if not isinstance(page, int) or isinstance(page, bool) or page < 1:
-                issues.append(ImportIssue(str(json_path), prefix + ".pdf_page", "PDF 页码必须是从 1 开始的正整数"))
-            elif reference:
+        if page is Ellipsis:
+            issues.append(ImportIssue(str(json_path), prefix + ".pdf_page", "PDF 页码必须是从 1 开始的正整数"))
+        elif isinstance(page, int):
+            if reference:
                 try:
                     if reference not in page_counts:
                         with fitz.open(reference) as document:
                             page_counts[reference] = document.page_count
                     count = page_counts[reference]
-                    if page > count: issues.append(ImportIssue(str(json_path), prefix + ".pdf_page", f"页码越界：PDF 只有 {count} 页"))
-                    else: page_index = page - 1
-                except Exception as exc: issues.append(ImportIssue(str(json_path), prefix + ".matched_reference_file", f"无法读取 PDF: {exc}"))
+                    if page > count:
+                        issues.append(ImportIssue(str(json_path), prefix + ".pdf_page", f"页码越界：PDF 只有 {count} 页"))
+                    else:
+                        page_index = page - 1
+                except Exception as exc:
+                    issues.append(ImportIssue(str(json_path), prefix + ".matched_reference_file", f"无法读取 PDF: {exc}"))
         elif image.get("needs_manual_review") is not True:
             issues.append(ImportIssue(str(json_path), prefix + ".pdf_page", "缺少页码；将仅允许学生照片裁剪", "warning"))
         match_conf = _confidence(image.get("page_match_confidence", 0), prefix + ".page_match_confidence", issues, str(json_path))
@@ -179,7 +276,19 @@ def validate_recognition(path: str | Path, selected_pdf: str | Path | None = Non
                     reference_hashes.setdefault(reference, _sha256(reference) if reference.is_file() else None)
                     if selected_hash and reference_hashes[reference] == selected_hash:
                         reference_matches, match_reason = True, "sha256"
-            validated.append({"student_name": student.strip(), "photo_file": str(photo), "matched_reference_file": str(reference) if reference else None, "pdf_page": page_index + 1 if page_index is not None else None, "pdf_page_index_0based": page_index, "page_match_confidence": match_conf or 0.0, "needs_manual_review": bool(image.get("needs_manual_review")), "review_reason": str(image.get("review_reason") or ""), "visible_questions": questions, "selected_pdf_matches": bool(reference_matches), "pdf_match_reason": match_reason})
+            validated.append({
+                "student_name": student_name,
+                "photo_file": str(photo),
+                "matched_reference_file": str(reference) if reference else None,
+                "pdf_page": page_index + 1 if page_index is not None else None,
+                "pdf_page_index_0based": page_index,
+                "page_match_confidence": match_conf or 0.0,
+                "needs_manual_review": bool(image.get("needs_manual_review")),
+                "review_reason": str(image.get("review_reason") or ""),
+                "visible_questions": questions,
+                "selected_pdf_matches": bool(reference_matches),
+                "pdf_match_reason": match_reason,
+            })
     return {"schema_version": version, "images": validated}, issues, json_path, root
 
 
@@ -263,9 +372,16 @@ def _question_v2(photo_hash: str, record: dict, image: dict, order: int) -> dict
     }
 
 
-def import_recognition_result(input_path: str | Path, selected_pdf: str | Path, output_dir: str | Path) -> dict:
+def import_recognition_result(
+    input_path: str | Path,
+    selected_pdf: str | Path,
+    output_dir: str | Path,
+    photo_root: str | Path | None = None,
+) -> dict:
     """Validate, persist and import all valid records; invalid rows stay reportable."""
-    result, issues, json_path, root = validate_recognition(input_path, selected_pdf)
+    result, issues, json_path, root = validate_recognition(
+        input_path, selected_pdf, photo_root=photo_root
+    )
     output = Path(output_dir).expanduser().resolve(); output.mkdir(parents=True, exist_ok=True)
     archive = output / "recognition_import"; archive.mkdir(exist_ok=True)
     shutil.copy2(json_path, archive / "raw_recognition_result.json")
